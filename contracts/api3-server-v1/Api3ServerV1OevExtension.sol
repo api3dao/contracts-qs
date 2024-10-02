@@ -153,13 +153,6 @@ contract Api3ServerV1OevExtension is
             updater: msg.sender,
             signedDataTimestampCutoff: signedDataTimestampCutoff
         });
-        emit PaidOevBid(
-            dappId,
-            msg.sender,
-            bidAmount,
-            signedDataTimestampCutoff,
-            auctioneer
-        );
         uint256 balanceBefore = address(this).balance;
         IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender)
             .api3ServerV1OevExtensionPayOevBidCallback(bidAmount, data);
@@ -167,6 +160,13 @@ contract Api3ServerV1OevExtension is
         require(
             balanceAfter - balanceBefore == bidAmount,
             "Bid amount not paid"
+        );
+        emit PaidOevBid(
+            dappId,
+            msg.sender,
+            bidAmount,
+            signedDataTimestampCutoff,
+            auctioneer
         );
     }
 
