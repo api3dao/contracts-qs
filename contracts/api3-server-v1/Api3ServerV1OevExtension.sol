@@ -7,6 +7,7 @@ import "./interfaces/IApi3ServerV1OevExtension.sol";
 import "./interfaces/IApi3ServerV1OevExtensionPayOevBidCallback.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/utils/Address.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/utils/cryptography/ECDSA.sol";
+import "../vendor/@openzeppelin/contracts@4.8.2/security/ReentrancyGuard.sol";
 import "./interfaces/IApi3ServerV1.sol";
 
 /// @title Api3ServerV1 extension for OEV support
@@ -18,7 +19,8 @@ import "./interfaces/IApi3ServerV1.sol";
 contract Api3ServerV1OevExtension is
     AccessControlRegistryAdminnedWithManager,
     DataFeedServer,
-    IApi3ServerV1OevExtension
+    IApi3ServerV1OevExtension,
+    ReentrancyGuard
 {
     using ECDSA for bytes32;
 
@@ -100,8 +102,8 @@ contract Api3ServerV1OevExtension is
     /// parameters and publishes it. Then, the updater account calls this
     /// function to pay the bid amount and claim the privilege to execute
     /// updates for the dApp with ID using the signed data whose timestamps are
-    /// limited by the cut-off. The payment can either be directly sent with msg.value,
-    /// or it can be sent in the end of the api3ServerV1OevExtensionPayOevBidCallback.
+    /// limited by the cut-off. The payment is sent in the end of the
+    /// api3ServerV1OevExtensionPayOevBidCallback.
     /// @param dappId dApp ID
     /// @param signedDataTimestampCutoff Signed data timestamp cut-off
     /// @param signature Signature provided by an auctioneer
@@ -113,7 +115,7 @@ contract Api3ServerV1OevExtension is
         bytes calldata signature,
         uint256 bidAmount,
         bytes calldata data
-    ) external payable override {
+    ) external override nonReentrant {
         require(dappId != 0, "dApp ID zero");
         require(signedDataTimestampCutoff != 0, "Cut-off zero");
         // It is intended for the auction periods to be in the order of a
@@ -160,10 +162,10 @@ contract Api3ServerV1OevExtension is
         );
         uint256 balanceBefore = address(this).balance;
         IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender)
-            .api3ServerV1OevExtensionPayOevBidCallback(data);
+            .api3ServerV1OevExtensionPayOevBidCallback(bidAmount, data);
         uint256 balanceAfter = address(this).balance;
         require(
-            msg.value >= bidAmount || balanceAfter - balanceBefore >= bidAmount,
+            balanceAfter - balanceBefore == bidAmount,
             "Bid amount not paid"
         );
     }

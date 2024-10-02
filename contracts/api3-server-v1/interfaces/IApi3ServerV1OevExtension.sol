@@ -34,7 +34,7 @@ interface IApi3ServerV1OevExtension is
         bytes calldata signature,
         uint256 bidAmount,
         bytes calldata data
-    ) external payable;
+    ) external;
 
     function updateDappOevDataFeed(
         uint256 dappId,
