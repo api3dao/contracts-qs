@@ -76,6 +76,8 @@ contract Api3ServerV1OevExtension is
         );
     }
 
+    fallback() external payable {}
+
     /// @notice Called by the contract manager or a withdrawer to withdraw the
     /// accumulated OEV auction proceeds
     /// @param recipient Recipient address
@@ -158,10 +160,7 @@ contract Api3ServerV1OevExtension is
         IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender)
             .api3ServerV1OevExtensionPayOevBidCallback(bidAmount, data);
         uint256 balanceAfter = address(this).balance;
-        require(
-            balanceAfter - balanceBefore == bidAmount,
-            "Payment mismatch"
-        );
+        require(balanceAfter - balanceBefore == bidAmount, "Payment mismatch");
         emit PaidOevBid(
             dappId,
             msg.sender,
