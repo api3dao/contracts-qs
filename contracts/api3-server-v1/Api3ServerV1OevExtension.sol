@@ -76,7 +76,7 @@ contract Api3ServerV1OevExtension is
         );
     }
 
-    fallback() external payable {}
+    receive() external payable {}
 
     /// @notice Called by the contract manager or a withdrawer to withdraw the
     /// accumulated OEV auction proceeds
