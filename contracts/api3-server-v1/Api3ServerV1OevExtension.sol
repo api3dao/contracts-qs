@@ -108,8 +108,7 @@ contract Api3ServerV1OevExtension is
     /// function to pay the bid amount and claim the privilege to execute
     /// updates for the dApp with ID using the signed data whose timestamps are
     /// limited by the cut-off. The payment must be sent within the
-    /// api3ServerV1OevExtensionPayOevBidCallback and will be checked
-    /// after the callback is executed.
+    /// onOevBidPayment and will be checked after the callback is executed.
     /// @param dappId dApp ID
     /// @param bidAmount Bid amount
     /// @param signedDataTimestampCutoff Signed data timestamp cut-off
@@ -160,8 +159,10 @@ contract Api3ServerV1OevExtension is
             signedDataTimestampCutoff: signedDataTimestampCutoff
         });
         uint256 balanceBefore = address(this).balance;
-        IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender)
-            .api3ServerV1OevExtensionPayOevBidCallback(bidAmount, data);
+        IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender).onOevBidPayment(
+            bidAmount,
+            data
+        );
         uint256 balanceAfter = address(this).balance;
         require(balanceAfter - balanceBefore == bidAmount, "Payment mismatch");
         emit PaidOevBid(
