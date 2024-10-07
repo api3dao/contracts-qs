@@ -35,6 +35,10 @@ contract Api3ServerV1OevExtension is
     /// @notice Auctioneer role description
     string public constant override AUCTIONEER_ROLE_DESCRIPTION = "Auctioneer";
 
+    /// @notice OEV bid payment callback required return value if successful
+    bytes32 public constant OEV_BID_PAYMENT_CALLBACK_SUCCESS =
+        keccak256("Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment");
+
     /// @notice Withdrawer role
     bytes32 public immutable override withdrawerRole;
 
@@ -159,9 +163,11 @@ contract Api3ServerV1OevExtension is
             signedDataTimestampCutoff: signedDataTimestampCutoff
         });
         uint256 balanceBefore = address(this).balance;
-        IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender).onOevBidPayment(
-            bidAmount,
-            data
+        require(
+            IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender)
+                .onOevBidPayment(bidAmount, data) ==
+                OEV_BID_PAYMENT_CALLBACK_SUCCESS,
+            "onOevBidPayment: Callback failed"
         );
         uint256 balanceAfter = address(this).balance;
         require(balanceAfter - balanceBefore == bidAmount, "Payment mismatch");
