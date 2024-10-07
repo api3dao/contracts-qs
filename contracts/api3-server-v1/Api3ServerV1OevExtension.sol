@@ -82,7 +82,10 @@ contract Api3ServerV1OevExtension is
     /// accumulated OEV auction proceeds
     /// @param recipient Recipient address
     /// @param amount Amount
-    function withdraw(address recipient, uint256 amount) external override {
+    function withdraw(
+        address recipient,
+        uint256 amount
+    ) external override nonReentrant {
         require(recipient != address(0), "Recipient address zero");
         require(amount != 0, "Amount zero");
         require(
