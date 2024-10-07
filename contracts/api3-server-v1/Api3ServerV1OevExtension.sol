@@ -108,15 +108,15 @@ contract Api3ServerV1OevExtension is
     /// api3ServerV1OevExtensionPayOevBidCallback and will be checked
     /// after the callback is executed.
     /// @param dappId dApp ID
+    /// @param bidAmount Bid amount
     /// @param signedDataTimestampCutoff Signed data timestamp cut-off
     /// @param signature Signature provided by an auctioneer
-    /// @param bidAmount Bid amount
     /// @param data Any data that should be passed through to the callback
     function payOevBid(
         uint256 dappId,
+        uint256 bidAmount,
         uint32 signedDataTimestampCutoff,
         bytes calldata signature,
-        uint256 bidAmount,
         bytes calldata data
     ) external override nonReentrant {
         require(dappId != 0, "dApp ID zero");

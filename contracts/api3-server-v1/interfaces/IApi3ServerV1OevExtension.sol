@@ -30,9 +30,9 @@ interface IApi3ServerV1OevExtension is
 
     function payOevBid(
         uint256 dappId,
+        uint256 bidAmount,
         uint32 signedDataTimestampCutoff,
         bytes calldata signature,
-        uint256 bidAmount,
         bytes calldata data
     ) external;
 
