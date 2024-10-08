@@ -116,6 +116,8 @@ contract Api3ServerV1OevExtension is
     /// limited by the cut-off. At least the bid amount must be sent to this
     /// contract with empty calldata in the `onOevBidPayment` callback, which
     /// will be checked upon succesful return.
+    /// As a result of the reentrancy guard, nesting OEV bid payments is not
+    /// allowed.
     /// @param dappId dApp ID
     /// @param bidAmount Bid amount
     /// @param signedDataTimestampCutoff Signed data timestamp cut-off
