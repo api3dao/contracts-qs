@@ -171,11 +171,11 @@ contract Api3ServerV1OevExtension is
                 bidAmount,
                 data
             ) == OEV_BID_PAYMENT_CALLBACK_SUCCESS,
-            "onOevBidPayment: Callback failed"
+            "OEV bid payment callback failed"
         );
         require(
             address(this).balance - balanceBefore == bidAmount,
-            "Payment mismatch"
+            "OEV bid payment amount mismatch"
         );
         emit PaidOevBid(
             dappId,
