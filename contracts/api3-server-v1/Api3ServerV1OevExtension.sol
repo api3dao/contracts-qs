@@ -113,13 +113,14 @@ contract Api3ServerV1OevExtension is
     /// parameters and publishes it. Then, the updater account calls this
     /// function to pay the bid amount and claim the privilege to execute
     /// updates for the dApp with ID using the signed data whose timestamps are
-    /// limited by the cut-off. The payment must be sent within the
-    /// onOevBidPayment and will be checked after the callback is executed.
+    /// limited by the cut-off. The exact bid amount must be sent to this
+    /// contract with empty calldata in the `onOevBidPayment` callback, which
+    /// will be checked upon succesful return.
     /// @param dappId dApp ID
     /// @param bidAmount Bid amount
     /// @param signedDataTimestampCutoff Signed data timestamp cut-off
     /// @param signature Signature provided by an auctioneer
-    /// @param data Any data that should be passed through to the callback
+    /// @param data Data that will be passed through the callback
     function payOevBid(
         uint256 dappId,
         uint256 bidAmount,
