@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @title Interface that contracts that call `payOevBid()` of
-/// Api3ServerV1OevExtension (i.e., OEV bid payers) must implement
+/// @title Interface that OEV bid payers (i.e., contracts that call
+/// `payOevBid()` of Api3ServerV1OevExtension) must implement
 interface IApi3ServerV1OevExtensionOevBidPayer {
     /// @notice Called back by Api3ServerV1OevExtension after an OEV bid payer
     /// has called `payOevBid()` of Api3ServerV1OevExtension. During the
