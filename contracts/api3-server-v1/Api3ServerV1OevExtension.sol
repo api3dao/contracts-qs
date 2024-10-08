@@ -79,6 +79,7 @@ contract Api3ServerV1OevExtension is
         );
     }
 
+    /// @dev Used to receive the bid amount in the OEV bid payment callback
     receive() external payable {}
 
     /// @notice Called by the contract manager or a withdrawer to withdraw the
