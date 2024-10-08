@@ -84,6 +84,8 @@ contract Api3ServerV1OevExtension is
 
     /// @notice Called by the contract manager or a withdrawer to withdraw the
     /// accumulated OEV auction proceeds
+    /// @dev This function has a reentrancy guard to prevent it from being
+    /// called in an OEV bid payment callback
     /// @param recipient Recipient address
     /// @param amount Amount
     function withdraw(
