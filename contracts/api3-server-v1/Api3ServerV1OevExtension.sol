@@ -173,8 +173,10 @@ contract Api3ServerV1OevExtension is
             ) == OEV_BID_PAYMENT_CALLBACK_SUCCESS,
             "onOevBidPayment: Callback failed"
         );
-        uint256 balanceAfter = address(this).balance;
-        require(balanceAfter - balanceBefore == bidAmount, "Payment mismatch");
+        require(
+            address(this).balance - balanceBefore == bidAmount,
+            "Payment mismatch"
+        );
         emit PaidOevBid(
             dappId,
             msg.sender,
