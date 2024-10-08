@@ -4,11 +4,11 @@ pragma solidity 0.8.17;
 import "../access/AccessControlRegistryAdminnedWithManager.sol";
 import "./DataFeedServer.sol";
 import "./interfaces/IApi3ServerV1OevExtension.sol";
-import "./interfaces/IApi3ServerV1OevExtensionPayOevBidCallback.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/utils/Address.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/utils/cryptography/ECDSA.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/security/ReentrancyGuard.sol";
 import "./interfaces/IApi3ServerV1.sol";
+import "./interfaces/IApi3ServerV1OevExtensionPayOevBidCallback.sol";
 
 /// @title Api3ServerV1 extension for OEV support
 /// @notice Api3ServerV1 contract supports base data feeds and OEV
