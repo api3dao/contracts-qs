@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @title Callback for IApi3ServerV1OevExtension#payOevBid
-/// @notice Any contract that calls IApi3ServerV1OevExtension#payOevBid must implement this interface
+/// @title Interface that contracts that call `payOevBid()` of
+/// Api3ServerV1OevExtension (i.e., OEV bid payers) must implement
 interface IApi3ServerV1OevExtensionOevBidPayer {
-    /// @notice Called to `msg.sender` after granting the privilege to execute updates for the dApp from IApi3ServerV1OevExtension#payOevBid.
-    /// @dev In the implementation you must repay the server the tokens owed for the payment of the OEV bid.
-    /// The implementation is responsible to check that the caller of this method is the correct Api3ServerV1OevExtension.
-    /// If successful, onOevBidPayment MUST return the keccak256 hash of "Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment".
-    /// @param bidAmount The amount of tokens owed to the server for the payment of the OEV bid
-    /// @param data Any data passed through by the caller via the IApi3ServerV1OevExtension#payOevBid call
-    /// @return The keccak256 hash of "Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment"
+    /// @notice Called back by Api3ServerV1OevExtension after an OEV bid payer
+    /// has called `payOevBid()` of Api3ServerV1OevExtension. During the
+    /// callback, the OEV bid payer will be allowed to update the OEV feeds
+    /// of the respective dApp. Before returning, the OEV bid payer must ensure
+    /// that the exact bid amount has been sent to Api3ServerV1OevExtension.
+    /// The returndata must start with the keccak256 hash of
+    /// "Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment".
+    /// @param bidAmount Bid amount
+    /// @param data Data that is passed through the callback
+    /// @return oevBidPaymentCallbackSuccess OEV bid payment callback success
+    /// code
     function onOevBidPayment(
         uint256 bidAmount,
         bytes calldata data
-    ) external returns (bytes32);
+    ) external returns (bytes32 oevBidPaymentCallbackSuccess);
 }
