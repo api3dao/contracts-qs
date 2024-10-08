@@ -113,7 +113,7 @@ contract Api3ServerV1OevExtension is
     /// parameters and publishes it. Then, the updater account calls this
     /// function to pay the bid amount and claim the privilege to execute
     /// updates for the dApp with ID using the signed data whose timestamps are
-    /// limited by the cut-off. The exact bid amount must be sent to this
+    /// limited by the cut-off. At least the bid amount must be sent to this
     /// contract with empty calldata in the `onOevBidPayment` callback, which
     /// will be checked upon succesful return.
     /// @param dappId dApp ID
@@ -174,8 +174,8 @@ contract Api3ServerV1OevExtension is
             "OEV bid payment callback failed"
         );
         require(
-            address(this).balance - balanceBefore == bidAmount,
-            "OEV bid payment amount mismatch"
+            address(this).balance - balanceBefore >= bidAmount,
+            "OEV bid payment amount short"
         );
         emit PaidOevBid(
             dappId,

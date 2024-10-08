@@ -8,7 +8,7 @@ interface IApi3ServerV1OevExtensionOevBidPayer {
     /// has called `payOevBid()` of Api3ServerV1OevExtension. During the
     /// callback, the OEV bid payer will be allowed to update the OEV feeds
     /// of the respective dApp. Before returning, the OEV bid payer must ensure
-    /// that the exact bid amount has been sent to Api3ServerV1OevExtension.
+    /// that at least the bid amount has been sent to Api3ServerV1OevExtension.
     /// The returndata must start with the keccak256 hash of
     /// "Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment".
     /// @param bidAmount Bid amount
