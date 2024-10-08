@@ -35,10 +35,6 @@ contract Api3ServerV1OevExtension is
     /// @notice Auctioneer role description
     string public constant override AUCTIONEER_ROLE_DESCRIPTION = "Auctioneer";
 
-    /// @notice OEV bid payment callback required return value if successful
-    bytes32 public constant OEV_BID_PAYMENT_CALLBACK_SUCCESS =
-        keccak256("Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment");
-
     /// @notice Withdrawer role
     bytes32 public immutable override withdrawerRole;
 
@@ -51,6 +47,9 @@ contract Api3ServerV1OevExtension is
     /// @notice Returns the parameters of the last paid bid for the dApp with
     /// ID
     mapping(uint256 => LastPaidBid) public override dappIdToLastPaidBid;
+
+    bytes32 private constant OEV_BID_PAYMENT_CALLBACK_SUCCESS =
+        keccak256("Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment");
 
     /// @param accessControlRegistry_ AccessControlRegistry contract address
     /// @param adminRoleDescription_ Admin role description
