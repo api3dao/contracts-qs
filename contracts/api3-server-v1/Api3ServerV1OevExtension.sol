@@ -8,7 +8,7 @@ import "../vendor/@openzeppelin/contracts@4.8.2/utils/Address.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/utils/cryptography/ECDSA.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/security/ReentrancyGuard.sol";
 import "./interfaces/IApi3ServerV1.sol";
-import "./interfaces/IApi3ServerV1OevExtensionPayOevBidCallback.sol";
+import "./interfaces/IApi3ServerV1OevExtensionOevBidPayer.sol";
 
 /// @title Api3ServerV1 extension for OEV support
 /// @notice Api3ServerV1 contract supports base data feeds and OEV
@@ -164,9 +164,10 @@ contract Api3ServerV1OevExtension is
         });
         uint256 balanceBefore = address(this).balance;
         require(
-            IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender)
-                .onOevBidPayment(bidAmount, data) ==
-                OEV_BID_PAYMENT_CALLBACK_SUCCESS,
+            IApi3ServerV1OevExtensionOevBidPayer(msg.sender).onOevBidPayment(
+                bidAmount,
+                data
+            ) == OEV_BID_PAYMENT_CALLBACK_SUCCESS,
             "onOevBidPayment: Callback failed"
         );
         uint256 balanceAfter = address(this).balance;
