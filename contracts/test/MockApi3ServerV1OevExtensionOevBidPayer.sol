@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../vendor/@openzeppelin/contracts@5.0.2/access/Ownable.sol";
+import "../vendor/@openzeppelin/contracts@4.8.2/access/Ownable.sol";
 import "../api3-server-v1/interfaces/IApi3ServerV1OevExtensionOevBidPayer.sol";
 import "../api3-server-v1/interfaces/IApi3ServerV1OevExtension.sol";
 
@@ -11,14 +11,8 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
 {
     address public immutable api3ServerV1OevExtension;
 
-    constructor(
-        address initialOwner,
-        address api3ServerV1OevExtension_
-    ) Ownable(initialOwner) {
-        require(
-            api3ServerV1OevExtension_ != address(0),
-            "Api3ServerV1OevExtension zero"
-        );
+    constructor(address initialOwner, address api3ServerV1OevExtension_) {
+        _transferOwnership(initialOwner);
         api3ServerV1OevExtension = api3ServerV1OevExtension_;
     }
 
