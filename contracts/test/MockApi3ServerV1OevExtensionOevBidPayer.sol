@@ -25,7 +25,13 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
         uint32 signedDataTimestampCutoff,
         bytes calldata signature,
         bytes calldata data
-    ) external onlyOwner {
+    ) external {
+        // This contract would normally not be allowed to call its
+        // `payOevBid()`, we are doing this here to test
+        // Api3ServerV1OevExtension reentrancy in OEV bid payment callback.
+        if (msg.sender != address(this)) {
+            _checkOwner();
+        }
         IApi3ServerV1OevExtension(api3ServerV1OevExtension).payOevBid(
             dappId,
             bidAmount,
