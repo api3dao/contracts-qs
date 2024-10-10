@@ -41,7 +41,7 @@ export async function payOevBid(
   );
   return api3ServerV1OevExtensionOevBidPayer
     .connect(roles.searcher)
-    .payOevBid(dappId, bidAmount, signedDataTimestampCutoff, signature, ethers.toUtf8Bytes('Expected callback data'));
+    .payOevBid(dappId, bidAmount, signedDataTimestampCutoff, signature, '0x');
 }
 
 describe('Api3ServerV1OevExtension', function () {

@@ -42,10 +42,13 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
             msg.sender == api3ServerV1OevExtension,
             "Not Api3ServerV1OevExtension"
         );
-        require(
-            keccak256(data) == keccak256("Expected callback data"),
-            "Callback data incorrect"
-        );
+        // `data` is the calldata of a call to self here to cover the test
+        // cases in a convenient way. This does not need to be the case for all
+        // OEV bid payer contracts.
+        if (data.length > 0) {
+            (bool success, ) = address(this).call(data);
+            require(success, "Data usage failed");
+        }
         (bool success, ) = msg.sender.call{value: bidAmount}("");
         require(success, "OEV bid payment failed");
         oevBidPaymentCallbackSuccess = keccak256(
