@@ -365,13 +365,7 @@ describe('Api3ServerV1OevExtension', function () {
               await expect(
                 api3ServerV1OevExtensionOevBidPayer
                   .connect(roles.searcher)
-                  .payOevBid(
-                    dappId,
-                    bidAmount,
-                    signedDataTimestampCutoff,
-                    signatureByRandomPerson,
-                    ethers.toUtf8Bytes('Expected callback data')
-                  )
+                  .payOevBid(dappId, bidAmount, signedDataTimestampCutoff, signatureByRandomPerson, '0x')
               ).to.be.revertedWith('Signature mismatch');
             });
           });
