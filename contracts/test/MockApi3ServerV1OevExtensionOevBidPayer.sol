@@ -49,6 +49,11 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
             msg.sender == api3ServerV1OevExtension,
             "Not Api3ServerV1OevExtension"
         );
+        // We have a special `data` value make `onOevBidPayment()` return an
+        // incorrect code to cover that test case.
+        if (keccak256(data) == keccak256(hex"1234")) {
+            return bytes32(0);
+        }
         // `data` is the calldata of a call to self here to cover the test
         // cases in a convenient way. This does not need to be the case for all
         // OEV bid payer contracts.
