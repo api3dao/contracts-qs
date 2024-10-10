@@ -395,7 +395,13 @@ describe('Api3ServerV1OevExtension', function () {
                 ethers.getBytes(
                   ethers.solidityPackedKeccak256(
                     ['uint256', 'uint256', 'address', 'uint256', 'uint32'],
-                    [chainId, dappId, roles.searcher!.address, bidAmount, signedDataTimestampCutoff]
+                    [
+                      chainId,
+                      dappId,
+                      await api3ServerV1OevExtensionOevBidPayer.getAddress(),
+                      bidAmount,
+                      signedDataTimestampCutoff,
+                    ]
                   )
                 )
               );
