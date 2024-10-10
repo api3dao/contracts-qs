@@ -54,10 +54,15 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
         if (keccak256(data) == keccak256(hex"1234")) {
             return bytes32(0);
         }
+        // We have a special `data` value cause the paid amount to be the half
+        // of the bid amount to cover that test case.
+        if (keccak256(data) == keccak256(hex"5678")) {
+            bidAmount /= 2;
+        }
         // `data` is the calldata of a call to self here to cover the test
         // cases in a convenient way. This does not need to be the case for all
         // OEV bid payer contracts.
-        if (data.length > 0) {
+        else if (data.length > 0) {
             Address.functionCall(address(this), data);
         }
         (bool success, ) = msg.sender.call{value: bidAmount}("");
