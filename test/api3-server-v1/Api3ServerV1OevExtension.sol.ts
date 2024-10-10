@@ -202,92 +202,129 @@ describe('Api3ServerV1OevExtension', function () {
   });
 
   describe('withdraw', function () {
-    context('Recipient is not zero address', function () {
-      context('Amount is not zero', function () {
-        context('Sender is the manager', function () {
-          context('Withdrawal is successful', function () {
-            it('withdraws', async function () {
-              const { roles, api3ServerV1OevExtension, api3ServerV1OevExtensionOevBidPayer } =
-                await helpers.loadFixture(deploy);
-              const amount = ethers.parseEther('1');
-              const nextTimestamp = (await helpers.time.latest()) + 1;
-              await helpers.time.setNextBlockTimestamp(nextTimestamp);
-              await payOevBid(roles, api3ServerV1OevExtensionOevBidPayer, 1, nextTimestamp + 1, amount);
-              const recipientBalanceBefore = await ethers.provider.getBalance(roles.randomPerson!.address);
-              await expect(
-                api3ServerV1OevExtension.connect(roles.manager).withdraw(roles.randomPerson!.address, amount)
-              )
-                .to.emit(api3ServerV1OevExtension, 'Withdrew')
-                .withArgs(roles.randomPerson!.address, amount, roles.manager!.address);
-              const recipientBalanceAfter = await ethers.provider.getBalance(roles.randomPerson!.address);
-              expect(recipientBalanceAfter - recipientBalanceBefore).to.equal(amount);
+    context('Is not a re-entered from an OEV bid payment callback', function () {
+      context('Recipient is not zero address', function () {
+        context('Amount is not zero', function () {
+          context('Sender is the manager', function () {
+            context('Withdrawal is successful', function () {
+              it('withdraws', async function () {
+                const { roles, api3ServerV1OevExtension, api3ServerV1OevExtensionOevBidPayer } =
+                  await helpers.loadFixture(deploy);
+                const amount = ethers.parseEther('1');
+                const nextTimestamp = (await helpers.time.latest()) + 1;
+                await helpers.time.setNextBlockTimestamp(nextTimestamp);
+                await payOevBid(roles, api3ServerV1OevExtensionOevBidPayer, 1, nextTimestamp + 1, amount);
+                const recipientBalanceBefore = await ethers.provider.getBalance(roles.randomPerson!.address);
+                await expect(
+                  api3ServerV1OevExtension.connect(roles.manager).withdraw(roles.randomPerson!.address, amount)
+                )
+                  .to.emit(api3ServerV1OevExtension, 'Withdrew')
+                  .withArgs(roles.randomPerson!.address, amount, roles.manager!.address);
+                const recipientBalanceAfter = await ethers.provider.getBalance(roles.randomPerson!.address);
+                expect(recipientBalanceAfter - recipientBalanceBefore).to.equal(amount);
+              });
+            });
+            context('Withdrawal is not successful', function () {
+              it('reverts', async function () {
+                const { roles, api3ServerV1OevExtension } = await helpers.loadFixture(deploy);
+                const amount = ethers.parseEther('1');
+                await expect(
+                  api3ServerV1OevExtension.connect(roles.manager).withdraw(roles.randomPerson!.address, amount)
+                ).to.be.revertedWith('Withdrawal reverted');
+              });
             });
           });
-          context('Withdrawal is not successful', function () {
+          context('Sender is a withdrawer', function () {
+            context('Withdrawal is successful', function () {
+              it('withdraws', async function () {
+                const { roles, api3ServerV1OevExtension, api3ServerV1OevExtensionOevBidPayer } =
+                  await helpers.loadFixture(deploy);
+                const amount = ethers.parseEther('1');
+                const nextTimestamp = (await helpers.time.latest()) + 1;
+                await helpers.time.setNextBlockTimestamp(nextTimestamp);
+                await payOevBid(roles, api3ServerV1OevExtensionOevBidPayer, 1, nextTimestamp + 1, amount);
+                const recipientBalanceBefore = await ethers.provider.getBalance(roles.randomPerson!.address);
+                await expect(
+                  api3ServerV1OevExtension.connect(roles.withdrawer).withdraw(roles.randomPerson!.address, amount)
+                )
+                  .to.emit(api3ServerV1OevExtension, 'Withdrew')
+                  .withArgs(roles.randomPerson!.address, amount, roles.withdrawer!.address);
+                const recipientBalanceAfter = await ethers.provider.getBalance(roles.randomPerson!.address);
+                expect(recipientBalanceAfter - recipientBalanceBefore).to.equal(amount);
+              });
+            });
+            context('Withdrawal is not successful', function () {
+              it('reverts', async function () {
+                const { roles, api3ServerV1OevExtension } = await helpers.loadFixture(deploy);
+                const amount = ethers.parseEther('1');
+                await expect(
+                  api3ServerV1OevExtension.connect(roles.withdrawer).withdraw(roles.randomPerson!.address, amount)
+                ).to.be.revertedWith('Withdrawal reverted');
+              });
+            });
+          });
+          context('Sender is not the manager or a sender', function () {
             it('reverts', async function () {
               const { roles, api3ServerV1OevExtension } = await helpers.loadFixture(deploy);
               const amount = ethers.parseEther('1');
               await expect(
-                api3ServerV1OevExtension.connect(roles.manager).withdraw(roles.randomPerson!.address, amount)
-              ).to.be.revertedWith('Withdrawal reverted');
+                api3ServerV1OevExtension.connect(roles.randomPerson).withdraw(roles.randomPerson!.address, amount)
+              ).to.be.revertedWith('Sender cannot withdraw');
             });
           });
         });
-        context('Sender is a withdrawer', function () {
-          context('Withdrawal is successful', function () {
-            it('withdraws', async function () {
-              const { roles, api3ServerV1OevExtension, api3ServerV1OevExtensionOevBidPayer } =
-                await helpers.loadFixture(deploy);
-              const amount = ethers.parseEther('1');
-              const nextTimestamp = (await helpers.time.latest()) + 1;
-              await helpers.time.setNextBlockTimestamp(nextTimestamp);
-              await payOevBid(roles, api3ServerV1OevExtensionOevBidPayer, 1, nextTimestamp + 1, amount);
-              const recipientBalanceBefore = await ethers.provider.getBalance(roles.randomPerson!.address);
-              await expect(
-                api3ServerV1OevExtension.connect(roles.withdrawer).withdraw(roles.randomPerson!.address, amount)
-              )
-                .to.emit(api3ServerV1OevExtension, 'Withdrew')
-                .withArgs(roles.randomPerson!.address, amount, roles.withdrawer!.address);
-              const recipientBalanceAfter = await ethers.provider.getBalance(roles.randomPerson!.address);
-              expect(recipientBalanceAfter - recipientBalanceBefore).to.equal(amount);
-            });
-          });
-          context('Withdrawal is not successful', function () {
-            it('reverts', async function () {
-              const { roles, api3ServerV1OevExtension } = await helpers.loadFixture(deploy);
-              const amount = ethers.parseEther('1');
-              await expect(
-                api3ServerV1OevExtension.connect(roles.withdrawer).withdraw(roles.randomPerson!.address, amount)
-              ).to.be.revertedWith('Withdrawal reverted');
-            });
-          });
-        });
-        context('Sender is not the manager or a sender', function () {
+        context('Amount is zero', function () {
           it('reverts', async function () {
             const { roles, api3ServerV1OevExtension } = await helpers.loadFixture(deploy);
-            const amount = ethers.parseEther('1');
             await expect(
-              api3ServerV1OevExtension.connect(roles.randomPerson).withdraw(roles.randomPerson!.address, amount)
-            ).to.be.revertedWith('Sender cannot withdraw');
+              api3ServerV1OevExtension.connect(roles.manager).withdraw(roles.randomPerson!.address, 0)
+            ).to.be.revertedWith('Amount zero');
           });
         });
       });
-      context('Amount is zero', function () {
+      context('Recipient is zero address', function () {
         it('reverts', async function () {
           const { roles, api3ServerV1OevExtension } = await helpers.loadFixture(deploy);
+          const amount = ethers.parseEther('1');
           await expect(
-            api3ServerV1OevExtension.connect(roles.manager).withdraw(roles.randomPerson!.address, 0)
-          ).to.be.revertedWith('Amount zero');
+            api3ServerV1OevExtension.connect(roles.manager).withdraw(ethers.ZeroAddress, amount)
+          ).to.be.revertedWith('Recipient address zero');
         });
       });
     });
-    context('Recipient is zero address', function () {
+    context('Is re-entered from an OEV bid payment callback', function () {
       it('reverts', async function () {
-        const { roles, api3ServerV1OevExtension } = await helpers.loadFixture(deploy);
-        const amount = ethers.parseEther('1');
+        const { roles, api3ServerV1OevExtension, api3ServerV1OevExtensionOevBidPayer } =
+          await helpers.loadFixture(deploy);
+        const dappId = 1;
+        const nextTimestamp = (await helpers.time.latest()) + 1;
+        const signedDataTimestampCutoff = nextTimestamp + 1;
+        await helpers.time.setNextBlockTimestamp(nextTimestamp);
+        const bidAmount = ethers.parseEther('1');
+        const { chainId } = await ethers.provider.getNetwork();
+        const signature = await roles.auctioneer!.signMessage(
+          ethers.getBytes(
+            ethers.solidityPackedKeccak256(
+              ['uint256', 'uint256', 'address', 'uint256', 'uint32'],
+              [
+                chainId,
+                dappId,
+                await api3ServerV1OevExtensionOevBidPayer.getAddress(),
+                bidAmount,
+                signedDataTimestampCutoff,
+              ]
+            )
+          )
+        );
+        const data = api3ServerV1OevExtension.interface.encodeFunctionData('withdraw', [
+          roles.randomPerson!.address,
+          bidAmount,
+        ]);
         await expect(
-          api3ServerV1OevExtension.connect(roles.manager).withdraw(ethers.ZeroAddress, amount)
-        ).to.be.revertedWith('Recipient address zero');
+          api3ServerV1OevExtensionOevBidPayer
+            .connect(roles.searcher)
+            .payOevBid(dappId, bidAmount, signedDataTimestampCutoff, signature, data)
+        ).to.be.revertedWith('ReentrancyGuard: reentrant call');
       });
     });
   });

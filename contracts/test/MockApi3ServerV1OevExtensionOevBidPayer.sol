@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import "../vendor/@openzeppelin/contracts@4.8.2/access/Ownable.sol";
 import "../api3-server-v1/interfaces/IApi3ServerV1OevExtensionOevBidPayer.sol";
+import "../vendor/@openzeppelin/contracts@4.8.2/utils/Address.sol";
 import "../api3-server-v1/interfaces/IApi3ServerV1OevExtension.sol";
 
 contract MockApi3ServerV1OevExtensionOevBidPayer is
@@ -61,5 +62,16 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
     ) external onlyOwner {
         IApi3ServerV1OevExtension(api3ServerV1OevExtension)
             .updateDappOevDataFeed(dappId, signedData);
+    }
+
+    // A normal OEV bid payer contract would not have this function. It is
+    // added to test Api3ServerV1OevExtension reentrancy in OEV bid payment
+    // callback.
+    function withdraw(address recipient, uint256 amount) external {
+        require(msg.sender == address(this), "Sender not this contract");
+        IApi3ServerV1OevExtension(api3ServerV1OevExtension).withdraw(
+            recipient,
+            amount
+        );
     }
 }
