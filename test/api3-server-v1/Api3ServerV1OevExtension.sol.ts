@@ -1586,4 +1586,72 @@ describe('Api3ServerV1OevExtension', function () {
       });
     });
   });
+
+  describe('intended OEV bid payment flow', function () {
+    it('works', async function () {
+      // The intended OEV bid payment flow is for `updateDappOevDataFeed()` to
+      // be called back in `payOevBid()` callback.
+      const { roles, api3ServerV1OevExtension, api3ServerV1OevExtensionOevBidPayer, beacons } =
+        await helpers.loadFixture(deploy);
+      const dappId = 1;
+      const nextTimestamp = (await helpers.time.latest()) + 1;
+      const signedDataTimestampCutoff = nextTimestamp + 1;
+      await helpers.time.setNextBlockTimestamp(nextTimestamp);
+      const bidAmount = ethers.parseEther('1');
+      const { chainId } = await ethers.provider.getNetwork();
+      const signature = await roles.auctioneer!.signMessage(
+        ethers.getBytes(
+          ethers.solidityPackedKeccak256(
+            ['uint256', 'uint256', 'address', 'uint256', 'uint32'],
+            [
+              chainId,
+              dappId,
+              await api3ServerV1OevExtensionOevBidPayer.getAddress(),
+              bidAmount,
+              signedDataTimestampCutoff,
+            ]
+          )
+        )
+      );
+      const beacon = beacons[0]!;
+      const beaconValue = Math.floor(Math.random() * 200 - 100);
+      const beaconTimestamp = signedDataTimestampCutoff - 1;
+      const signedData = ethers.AbiCoder.defaultAbiCoder().encode(
+        ['address', 'bytes32', 'uint256', 'bytes', 'bytes'],
+        [
+          beacon.airnode.address,
+          beacon.templateId,
+          beaconTimestamp,
+          encodeData(beaconValue),
+          await signDataWithAlternateTemplateId(
+            beacon.airnode,
+            beacon.templateId,
+            beaconTimestamp,
+            encodeData(beaconValue)
+          ),
+        ]
+      );
+      await helpers.time.setNextBlockTimestamp(nextTimestamp + 1);
+      const data = api3ServerV1OevExtension.interface.encodeFunctionData('updateDappOevDataFeed', [
+        dappId,
+        [signedData],
+      ]);
+      await expect(
+        api3ServerV1OevExtensionOevBidPayer
+          .connect(roles.searcher)
+          .payOevBid(dappId, bidAmount, signedDataTimestampCutoff, signature, data)
+      )
+        .to.emit(api3ServerV1OevExtension, 'UpdatedDappOevDataFeed')
+        .withArgs(
+          dappId,
+          await api3ServerV1OevExtensionOevBidPayer.getAddress(),
+          beacon.beaconId,
+          beaconValue,
+          beaconTimestamp
+        );
+      const oevDataFeed = await api3ServerV1OevExtension.oevDataFeed(dappId, beacon.beaconId);
+      expect(oevDataFeed.value).to.equal(beaconValue);
+      expect(oevDataFeed.timestamp).to.equal(beaconTimestamp);
+    });
+  });
 });

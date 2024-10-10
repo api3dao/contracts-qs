@@ -75,7 +75,10 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
     function updateDappOevDataFeed(
         uint256 dappId,
         bytes[] calldata signedData
-    ) external onlyOwner {
+    ) external {
+        if (msg.sender != address(this)) {
+            _checkOwner();
+        }
         IApi3ServerV1OevExtension(api3ServerV1OevExtension)
             .updateDappOevDataFeed(dappId, signedData);
     }
