@@ -21,7 +21,7 @@ Therefore, having obtained a signature that allows one to update the OEV feeds o
 ## Backloaded OEV bid payment
 
 Assuming that there will be multiple competitive searchers, the winning bid amounts are expected to be comparable to the OEV revenue.
-For effective OEV extraction, the searchers should be able to cover the bid amount out of the OEV revenue, so that bidding large amounts does not require a large capital.
+For effective OEV extraction, the searchers should be able to use the OEV revenue while paying the bid amount, so that bidding large amounts does not require a large capital.
 
 A potential approach here is for the searcher to take out a flash loan, pay the OEV bid amount, extract the OEV and pay back the flash loan.
 This is not desirable for two reasons:
