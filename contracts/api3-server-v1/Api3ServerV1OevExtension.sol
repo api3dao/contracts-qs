@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../vendor/@openzeppelin/contracts@4.8.2/security/ReentrancyGuard.sol";
 import "../access/AccessControlRegistryAdminnedWithManager.sol";
 import "./DataFeedServer.sol";
 import "./interfaces/IApi3ServerV1OevExtension.sol";
@@ -17,7 +16,6 @@ import "./interfaces/IApi3ServerV1OevExtensionOevBidPayer.sol";
 /// are intended to read API3 data feeds through a standardized proxy, which
 /// abstracts this change away.
 contract Api3ServerV1OevExtension is
-    ReentrancyGuard,
     AccessControlRegistryAdminnedWithManager,
     DataFeedServer,
     IApi3ServerV1OevExtension
@@ -51,6 +49,12 @@ contract Api3ServerV1OevExtension is
     bytes32 private constant OEV_BID_PAYMENT_CALLBACK_SUCCESS =
         keccak256("Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment");
 
+    bytes32 private constant NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH =
+        bytes32(type(uint256).max);
+
+    bytes32 private updaterAddressAndBidAmountHash =
+        NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH;
+
     /// @param accessControlRegistry_ AccessControlRegistry contract address
     /// @param adminRoleDescription_ Admin role description
     /// @param manager_ Manager address
@@ -80,7 +84,13 @@ contract Api3ServerV1OevExtension is
     }
 
     /// @dev Used to receive the bid amount in the OEV bid payment callback
-    receive() external payable {}
+    receive() external payable {
+        require(
+            keccak256(abi.encodePacked(msg.sender, msg.value)) ==
+                updaterAddressAndBidAmountHash,
+            "Bid payment invalid"
+        );
+    }
 
     /// @notice Called by the contract manager or a withdrawer to withdraw the
     /// accumulated OEV auction proceeds
@@ -88,10 +98,12 @@ contract Api3ServerV1OevExtension is
     /// called in an OEV bid payment callback
     /// @param recipient Recipient address
     /// @param amount Amount
-    function withdraw(
-        address recipient,
-        uint256 amount
-    ) external override nonReentrant {
+    function withdraw(address recipient, uint256 amount) external override {
+        require(
+            updaterAddressAndBidAmountHash ==
+                NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH,
+            "ReentrancyGuard: reentrant call"
+        );
         require(recipient != address(0), "Recipient address zero");
         require(amount != 0, "Amount zero");
         require(
@@ -129,7 +141,15 @@ contract Api3ServerV1OevExtension is
         uint32 signedDataTimestampCutoff,
         bytes calldata signature,
         bytes calldata data
-    ) external override nonReentrant {
+    ) external override {
+        require(
+            updaterAddressAndBidAmountHash ==
+                NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH,
+            "ReentrancyGuard: reentrant call"
+        );
+        updaterAddressAndBidAmountHash = keccak256(
+            abi.encodePacked(msg.sender, bidAmount)
+        );
         require(dappId != 0, "dApp ID zero");
         require(signedDataTimestampCutoff != 0, "Cut-off zero");
         // It is intended for the auction periods to be in the order of a
@@ -176,9 +196,10 @@ contract Api3ServerV1OevExtension is
             "OEV bid payment callback failed"
         );
         require(
-            address(this).balance - balanceBefore >= bidAmount,
-            "OEV bid payment amount short"
+            address(this).balance - balanceBefore == bidAmount,
+            "OEV bid amount not sent"
         );
+        updaterAddressAndBidAmountHash = NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH;
         emit PaidOevBid(
             dappId,
             msg.sender,
