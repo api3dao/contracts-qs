@@ -49,11 +49,12 @@ contract Api3ServerV1OevExtension is
     bytes32 private constant OEV_BID_PAYMENT_CALLBACK_SUCCESS =
         keccak256("Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment");
 
-    bytes32 private constant NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH =
+    bytes32
+        private constant NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH =
         bytes32(type(uint256).max);
 
-    bytes32 private updaterAddressAndBidAmountHash =
-        NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH;
+    bytes32 private updaterAddressAndExpectedBalanceAfterBidPaymentHash =
+        NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH;
 
     /// @param accessControlRegistry_ AccessControlRegistry contract address
     /// @param adminRoleDescription_ Admin role description
@@ -86,8 +87,8 @@ contract Api3ServerV1OevExtension is
     /// @dev Used to receive the bid amount in the OEV bid payment callback
     receive() external payable {
         require(
-            keccak256(abi.encodePacked(msg.sender, msg.value)) ==
-                updaterAddressAndBidAmountHash,
+            keccak256(abi.encodePacked(msg.sender, address(this).balance)) ==
+                updaterAddressAndExpectedBalanceAfterBidPaymentHash,
             "Bid payment invalid"
         );
     }
@@ -100,8 +101,8 @@ contract Api3ServerV1OevExtension is
     /// @param amount Amount
     function withdraw(address recipient, uint256 amount) external override {
         require(
-            updaterAddressAndBidAmountHash ==
-                NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH,
+            updaterAddressAndExpectedBalanceAfterBidPaymentHash ==
+                NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH,
             "ReentrancyGuard: reentrant call"
         );
         require(recipient != address(0), "Recipient address zero");
@@ -143,12 +144,12 @@ contract Api3ServerV1OevExtension is
         bytes calldata data
     ) external override {
         require(
-            updaterAddressAndBidAmountHash ==
-                NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH,
+            updaterAddressAndExpectedBalanceAfterBidPaymentHash ==
+                NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH,
             "ReentrancyGuard: reentrant call"
         );
-        updaterAddressAndBidAmountHash = keccak256(
-            abi.encodePacked(msg.sender, bidAmount)
+        updaterAddressAndExpectedBalanceAfterBidPaymentHash = keccak256(
+            abi.encodePacked(msg.sender, address(this).balance + bidAmount)
         );
         require(dappId != 0, "dApp ID zero");
         require(signedDataTimestampCutoff != 0, "Cut-off zero");
@@ -199,7 +200,7 @@ contract Api3ServerV1OevExtension is
             address(this).balance - balanceBefore == bidAmount,
             "OEV bid amount not sent"
         );
-        updaterAddressAndBidAmountHash = NULL_UPDATER_ADDRESS_AND_BID_AMOUNT_HASH;
+        updaterAddressAndExpectedBalanceAfterBidPaymentHash = NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH;
         emit PaidOevBid(
             dappId,
             msg.sender,
