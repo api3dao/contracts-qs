@@ -6,13 +6,22 @@ import "../api3-server-v1/interfaces/IApi3ServerV1OevExtensionOevBidPayer.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/utils/Address.sol";
 import "../api3-server-v1/interfaces/IApi3ServerV1OevExtension.sol";
 
+contract ProxyValueSender {
+    constructor(address payable target) payable {
+        Address.functionCallWithValue(target, "", msg.value);
+    }
+}
+
 contract MockApi3ServerV1OevExtensionOevBidPayer is
     Ownable,
     IApi3ServerV1OevExtensionOevBidPayer
 {
-    address public immutable api3ServerV1OevExtension;
+    address payable public immutable api3ServerV1OevExtension;
 
-    constructor(address initialOwner, address api3ServerV1OevExtension_) {
+    constructor(
+        address initialOwner,
+        address payable api3ServerV1OevExtension_
+    ) {
         _transferOwnership(initialOwner);
         api3ServerV1OevExtension = api3ServerV1OevExtension_;
     }
@@ -58,6 +67,17 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
         // of the bid amount to cover that test case.
         if (keccak256(data) == keccak256(hex"5678")) {
             bidAmount /= 2;
+        } else if (keccak256(data) == keccak256(hex"9abc")) {
+            new ProxyValueSender{value: bidAmount}(api3ServerV1OevExtension);
+            return
+                keccak256(
+                    "Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment"
+                );
+        } else if (keccak256(data) == keccak256(hex"def0")) {
+            return
+                keccak256(
+                    "Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment"
+                );
         }
         // `data` is the calldata of a call to self here to cover the test
         // cases in a convenient way. This does not need to be the case for all
@@ -65,8 +85,7 @@ contract MockApi3ServerV1OevExtensionOevBidPayer is
         else if (data.length > 0) {
             Address.functionCall(address(this), data);
         }
-        (bool success, ) = msg.sender.call{value: bidAmount}("");
-        require(success, "OEV bid payment failed");
+        Address.functionCallWithValue(msg.sender, "", bidAmount);
         oevBidPaymentCallbackSuccess = keccak256(
             "Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment"
         );
