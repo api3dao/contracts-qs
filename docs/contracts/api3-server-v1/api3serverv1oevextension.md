@@ -29,12 +29,11 @@ This is not desirable for two reasons:
 1. The availability of a flash loan service becomes an absolute requirement for paying OEV bid amounts.
 2. The OEV extraction operation itself (e.g., liquidating a borrower) often requires taking out a flash loan, and most services do not support nested flash loans due to using basic reentrancy guards.
 
-As a solution, we use backloaded OEV bid payments, where we allow OEV feed updates under the condition that the bid amount will be paid before the transaction is over.
+As a solution, we use backloaded OEV bid payments, where we allow OEV feed updates under the condition that the exact bid amount will be paid by update sender contract before the transaction is over.
 This is implemented similarly to [ERC-3156](https://eips.ethereum.org/EIPS/eip-3156), where `payOevBid()` is called by the update sender contract specified in the bid, whose `onOevBidPayment()` function is called back to extract the OEV and pay the bid amount before returning.
 
 As a note, `payOevBid()` has a reentrancy guard similar to flash loan lender contracts, which implies that one cannot pay OEV bids in a nested way.
-An alternative approach here is to handle the reentrancies explicitly rather than blocking them off altogether, yet we decided against this for the sake of simplicity.
-Note that the following flow is still possible, even if computing the loan amount will be somewhat impractical:
+Note that the following flow is still possible, even if computing the total loan amount will be somewhat impractical:
 
 - Take out a large flash loan.
 - Call `payOevBid()` multiple times with callbacks that only pay the bid amount with the loan.

@@ -46,13 +46,19 @@ contract Api3ServerV1OevExtension is
     /// ID
     mapping(uint256 => LastPaidBid) public override dappIdToLastPaidBid;
 
+    /// @dev Refer to ERC-3156 for a similar scheme
     bytes32 private constant OEV_BID_PAYMENT_CALLBACK_SUCCESS =
         keccak256("Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment");
 
+    /// @dev `bytes32(type(uint256).max)` is used as the unset hash value
+    /// (rather than zero) so that setting it is less expensive. Refer to
+    /// openzeppelin-contracts ReentrancyGuard for a similar implementation.
     bytes32
         private constant NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH =
         bytes32(type(uint256).max);
 
+    /// @dev This state variable acts as a reentrancy flag and prevents value
+    /// transfers that do not correspond to an expected bid payment
     bytes32 private updaterAddressAndExpectedBalanceAfterBidPaymentHash =
         NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH;
 
@@ -84,7 +90,9 @@ contract Api3ServerV1OevExtension is
         );
     }
 
-    /// @dev Used to receive the bid amount in the OEV bid payment callback
+    /// @notice Called by the OEV bid payer to send the bid amount in the bid
+    /// payment callback
+    /// @dev The sender must be the OEV bid payer and the amount must be exact
     receive() external payable {
         require(
             keccak256(abi.encodePacked(msg.sender, address(this).balance)) ==
@@ -95,8 +103,7 @@ contract Api3ServerV1OevExtension is
 
     /// @notice Called by the contract manager or a withdrawer to withdraw the
     /// accumulated OEV auction proceeds
-    /// @dev This function has a reentrancy guard to prevent it from being
-    /// called in an OEV bid payment callback
+    /// @dev This function cannot be called in an OEV bid payment callback
     /// @param recipient Recipient address
     /// @param amount Amount
     function withdraw(address recipient, uint256 amount) external override {
@@ -126,11 +133,10 @@ contract Api3ServerV1OevExtension is
     /// parameters and publishes it. Then, the updater account calls this
     /// function to pay the bid amount and claim the privilege to execute
     /// updates for the dApp with ID using the signed data whose timestamps are
-    /// limited by the cut-off. At least the bid amount must be sent to this
-    /// contract with empty calldata in the `onOevBidPayment` callback, which
-    /// will be checked upon succesful return.
-    /// As a result of the reentrancy guard, nesting OEV bid payments is not
-    /// allowed.
+    /// limited by the cut-off.
+    /// The account that has called this function must send the exact bid
+    /// amount to this contract in the respective OEV bid payment callback.
+    /// @dev This function cannot be called in an OEV bid payment callback
     /// @param dappId dApp ID
     /// @param bidAmount Bid amount
     /// @param signedDataTimestampCutoff Signed data timestamp cut-off
