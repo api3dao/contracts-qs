@@ -97,7 +97,7 @@ contract Api3ServerV1OevExtension is
         require(
             keccak256(abi.encodePacked(msg.sender, address(this).balance)) ==
                 updaterAddressAndExpectedBalanceAfterBidPaymentHash,
-            "Bid payment invalid"
+            "OEV bid payment invalid"
         );
     }
 
@@ -110,7 +110,7 @@ contract Api3ServerV1OevExtension is
         require(
             updaterAddressAndExpectedBalanceAfterBidPaymentHash ==
                 NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH,
-            "ReentrancyGuard: reentrant call"
+            "Reentrant call"
         );
         require(recipient != address(0), "Recipient address zero");
         require(amount != 0, "Amount zero");
@@ -152,7 +152,7 @@ contract Api3ServerV1OevExtension is
         require(
             updaterAddressAndExpectedBalanceAfterBidPaymentHash ==
                 NULL_UPDATER_ADDRESS_AND_EXPECTED_BALANCE_AFTER_BID_PAYMENT_HASH,
-            "ReentrancyGuard: reentrant call"
+            "Reentrant call"
         );
         updaterAddressAndExpectedBalanceAfterBidPaymentHash = keccak256(
             abi.encodePacked(msg.sender, address(this).balance + bidAmount)
