@@ -71,7 +71,7 @@ Both of these functions can only be called by `address(0)`, i.e., the searcher i
 The searcher is intended to implement an OEV extraction contract, whose address is specified as the [update sender address](./oevauctionhouse.md#biddetails) in their bid.
 Upon winning, the searcher calls their OEV extraction contract for it to call `payOevBid()` of Api3ServerV1OevExtension.
 Api3ServerV1OevExtension calls `onOevBidPayment()` of the OEV extraction contract back with data that was passed to it by the OEV extraction contract.
-At this point, the OEV extraction contract is allowed to update the respective OEV feeds by calling `updateDappOevDataFeedWithAllowedSignedData()`, and thus can capture the targeted OEV opportunities.
+At this point, the OEV extraction contract is allowed to update the respective OEV feeds by calling `updateDappOevDataFeed()`, and thus can capture the targeted OEV opportunities.
 Before returning, the OEV extraction contract must ensure that Api3ServerV1OevExtension is sent at least the bid amount.
 Failing to pay the bid amount before returning will cause the transaction to revert.
 
