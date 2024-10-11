@@ -337,7 +337,7 @@ describe('Api3ServerV1OevExtension', function () {
             context('Signature is valid', function () {
               context('Last paid bid timestamp cut-off is more recent than the current one', function () {
                 context('OEV bid payment callback does not fail', function () {
-                  context('OEV bid payment is not short', function () {
+                  context('Paid OEV bid amount is correct', function () {
                     it('pays OEV bid', async function () {
                       const { roles, api3ServerV1OevExtension, api3ServerV1OevExtensionOevBidPayer } =
                         await helpers.loadFixture(deploy);
@@ -371,7 +371,7 @@ describe('Api3ServerV1OevExtension', function () {
                       expect(lastPaidBid.signedDataTimestampCutoff).to.equal(signedDataTimestampCutoff);
                     });
                   });
-                  context('OEV bid payment is short', function () {
+                  context('Paid OEV bid amount is not correct', function () {
                     it('reverts', async function () {
                       const { roles, api3ServerV1OevExtensionOevBidPayer } = await helpers.loadFixture(deploy);
                       const dappId = 1;
@@ -398,7 +398,7 @@ describe('Api3ServerV1OevExtension', function () {
                         api3ServerV1OevExtensionOevBidPayer
                           .connect(roles.searcher)
                           .payOevBid(dappId, bidAmount, signedDataTimestampCutoff, signature, '0x5678')
-                      ).to.be.revertedWith('OEV bid payment amount short');
+                      ).to.be.revertedWith('OEV bid payment failed');
                     });
                   });
                 });
