@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "../vendor/@openzeppelin/contracts@4.8.2/security/ReentrancyGuard.sol";
 import "../access/AccessControlRegistryAdminnedWithManager.sol";
 import "./DataFeedServer.sol";
 import "./interfaces/IApi3ServerV1OevExtension.sol";
-import "./interfaces/IApi3ServerV1OevExtensionPayOevBidCallback.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/utils/Address.sol";
 import "../vendor/@openzeppelin/contracts@4.8.2/utils/cryptography/ECDSA.sol";
-import "../vendor/@openzeppelin/contracts@4.8.2/security/ReentrancyGuard.sol";
 import "./interfaces/IApi3ServerV1.sol";
+import "./interfaces/IApi3ServerV1OevExtensionOevBidPayer.sol";
 
 /// @title Api3ServerV1 extension for OEV support
 /// @notice Api3ServerV1 contract supports base data feeds and OEV
@@ -17,10 +17,10 @@ import "./interfaces/IApi3ServerV1.sol";
 /// are intended to read API3 data feeds through a standardized proxy, which
 /// abstracts this change away.
 contract Api3ServerV1OevExtension is
+    ReentrancyGuard,
     AccessControlRegistryAdminnedWithManager,
     DataFeedServer,
-    IApi3ServerV1OevExtension,
-    ReentrancyGuard
+    IApi3ServerV1OevExtension
 {
     using ECDSA for bytes32;
 
@@ -35,10 +35,6 @@ contract Api3ServerV1OevExtension is
     /// @notice Auctioneer role description
     string public constant override AUCTIONEER_ROLE_DESCRIPTION = "Auctioneer";
 
-    /// @notice OEV bid payment callback required return value if successful
-    bytes32 public constant OEV_BID_PAYMENT_CALLBACK_SUCCESS =
-        keccak256("Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment");
-
     /// @notice Withdrawer role
     bytes32 public immutable override withdrawerRole;
 
@@ -51,6 +47,9 @@ contract Api3ServerV1OevExtension is
     /// @notice Returns the parameters of the last paid bid for the dApp with
     /// ID
     mapping(uint256 => LastPaidBid) public override dappIdToLastPaidBid;
+
+    bytes32 private constant OEV_BID_PAYMENT_CALLBACK_SUCCESS =
+        keccak256("Api3ServerV1OevExtensionOevBidPayer.onOevBidPayment");
 
     /// @param accessControlRegistry_ AccessControlRegistry contract address
     /// @param adminRoleDescription_ Admin role description
@@ -80,10 +79,13 @@ contract Api3ServerV1OevExtension is
         );
     }
 
+    /// @dev Used to receive the bid amount in the OEV bid payment callback
     receive() external payable {}
 
     /// @notice Called by the contract manager or a withdrawer to withdraw the
     /// accumulated OEV auction proceeds
+    /// @dev This function has a reentrancy guard to prevent it from being
+    /// called in an OEV bid payment callback
     /// @param recipient Recipient address
     /// @param amount Amount
     function withdraw(
@@ -111,13 +113,16 @@ contract Api3ServerV1OevExtension is
     /// parameters and publishes it. Then, the updater account calls this
     /// function to pay the bid amount and claim the privilege to execute
     /// updates for the dApp with ID using the signed data whose timestamps are
-    /// limited by the cut-off. The payment must be sent within the
-    /// onOevBidPayment and will be checked after the callback is executed.
+    /// limited by the cut-off. At least the bid amount must be sent to this
+    /// contract with empty calldata in the `onOevBidPayment` callback, which
+    /// will be checked upon succesful return.
+    /// As a result of the reentrancy guard, nesting OEV bid payments is not
+    /// allowed.
     /// @param dappId dApp ID
     /// @param bidAmount Bid amount
     /// @param signedDataTimestampCutoff Signed data timestamp cut-off
     /// @param signature Signature provided by an auctioneer
-    /// @param data Any data that should be passed through to the callback
+    /// @param data Data that will be passed through the callback
     function payOevBid(
         uint256 dappId,
         uint256 bidAmount,
@@ -164,13 +169,16 @@ contract Api3ServerV1OevExtension is
         });
         uint256 balanceBefore = address(this).balance;
         require(
-            IApi3ServerV1OevExtensionPayOevBidCallback(msg.sender)
-                .onOevBidPayment(bidAmount, data) ==
-                OEV_BID_PAYMENT_CALLBACK_SUCCESS,
-            "onOevBidPayment: Callback failed"
+            IApi3ServerV1OevExtensionOevBidPayer(msg.sender).onOevBidPayment(
+                bidAmount,
+                data
+            ) == OEV_BID_PAYMENT_CALLBACK_SUCCESS,
+            "OEV bid payment callback failed"
         );
-        uint256 balanceAfter = address(this).balance;
-        require(balanceAfter - balanceBefore == bidAmount, "Payment mismatch");
+        require(
+            address(this).balance - balanceBefore >= bidAmount,
+            "OEV bid payment amount short"
+        );
         emit PaidOevBid(
             dappId,
             msg.sender,
