@@ -108,3 +108,8 @@ It is recommended to run automated workers to handle these cases, or at least th
 
 In the case that the AirseekerRegistry owner is a contract (e.g., Api3MarketV2), it should be implemented in a way to enforce these, at least partially (e.g., Api3MarketV2 does not force the user to set signed API URLs while activating a data feed by buying a subscription).
 In the case that the AirseekerRegistry owner is a multisig or an EOA, either care needs to be taken, or more ideally, a frontend that abstracts these requirements away (by creating a multicall transaction that satisfies all requirements) should be used.
+
+> [!WARNING]
+> A possible pitfall is expecting `activeDataFeed()` to return the same data feed for a specific index.
+> Since the index belongs to an `EnumerableSet` type, addition and removal of active data feeds may cause the indices of all the remaining active data feeds to change.
+> Refer to the [Airseeker-related section](#how-airseeker-uses-airseekerregistry) for an example of how `activeDataFeed()` can be used correctly.
