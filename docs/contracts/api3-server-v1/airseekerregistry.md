@@ -19,6 +19,7 @@ The first of these multicalls includes an `activeDataFeedCount()` call, which te
 
 In the case that the active data feeds change (in that they become activated/deactivated) while Airseeker is making these multicalls, Airseeker may fetch the same feed in two separate batches, or miss a data feed.
 This is deemed acceptable, assuming that active data feeds will not change very frequently and Airseeker will run its update loop very frequently (meaning that any missed data feed will be handled on the next iteration.)
+For example, if the owner of an AirseekerRegistry is an [Api3MarketV2](./api3marketv2.md), active data feeds would only change through the purchases and expiration of subscriptions, which are sufficiently throttled.
 
 Let us go over what `activeDataFeed()` returns.
 
